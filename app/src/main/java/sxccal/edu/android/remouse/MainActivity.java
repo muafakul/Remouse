@@ -72,23 +72,27 @@ public class MainActivity extends AppCompatActivity
         String title = getString(R.string.app_name);
         if (id == R.id.nav_mouse) {
             // Handle the mouse action
-            fragment=new MouseFragment();
-            title="Remote Mouse";
+            fragment = new MouseFragment();
+            title = "Remote Mouse";
 
         } else if (id == R.id.nav_keyboard) {
             // Handle the keyboard action
-            fragment=new KeyboardFragment();
-            title="Remote Keyboard";
+            fragment = new KeyboardFragment();
+            title = "Remote Keyboard";
 
         } else if (id == R.id.nav_connect) {
             // connection module
-            fragment=new ConnectionFragment();
-            title="Connect to PC";
+            fragment = new ConnectionFragment();
+            title = "Connect to PC";
 
         } else if (id == R.id.nav_about) {
             // App info
-            fragment=new AboutFragment();
-            title="About app";
+            fragment = new AboutFragment();
+            title = "About app";
+        } else if(id == R.id.nav_sensor) {
+            //Sensor Data Dump
+            fragment = new SensorFragment();
+            title = "Sensor Data";
         }
         if (fragment != null) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();

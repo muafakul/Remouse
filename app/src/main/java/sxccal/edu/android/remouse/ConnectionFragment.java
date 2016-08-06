@@ -41,23 +41,26 @@ public class ConnectionFragment extends Fragment implements View.OnClickListener
         try {
             if(view.getId() == R.id.connect_button) {
                 if(!sActiveConnection) {
-                    connect();
+                    startClientConnectionThread();
                     sActiveConnection = true;
                 }
             } else if(view.getId() == R.id.discover_button) {
                 // TODO: Local network discovery module
             }
-        }catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             e.printStackTrace();
         }
     }
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                           int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case REQUEST_INTERNET_ACCESS: {
-                if (grantResults.length == 0 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this.getActivity(), "The app was not allowed to write to your storage. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
+                if (grantResults.length == 0 ||
+                        grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this.getActivity(), "Permission denied",
+                            Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -73,7 +76,7 @@ public class ConnectionFragment extends Fragment implements View.OnClickListener
         }
     }
 
-    private void connect() {
+    private void startClientConnectionThread() {
         Thread clientConnectionThread = new Thread(new ClientConnectionThread());
         clientConnectionThread.start();
     }

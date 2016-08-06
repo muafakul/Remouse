@@ -43,7 +43,7 @@ public class ClientConnectionThread implements Runnable {
                 datagramSocket.close();
                 ConnectionFragment.sActiveConnection = false;
             }
-        }catch(IOException|InterruptedException e) {
+        } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         }
     }
