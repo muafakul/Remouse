@@ -59,11 +59,17 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
     }
 
     @Override
-    public void onClick(View view) {
+    public void onAttach(Context context) {
+        super.onAttach(context);
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             getRWPermission();
         }
+    }
+
+    @Override
+    public void onClick(View view) {
+
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         try {
             if(view.getId() == R.id.nacc_button) {
@@ -161,7 +167,7 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
 
     private void getRWPermission() {
         boolean hasPermission = (ContextCompat.checkSelfPermission(this.getContext(),
-                Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED);
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
         if (!hasPermission) {
             ActivityCompat.requestPermissions(this.getActivity(),
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,

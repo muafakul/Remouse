@@ -1,6 +1,7 @@
 package sxccal.edu.android.remouse;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -34,21 +35,24 @@ public class ConnectionFragment extends Fragment implements View.OnClickListener
     }
 
     @Override
-    public void onClick(View view) {
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             getInternetPermission();
         }
-        try {
-            if(view.getId() == R.id.connect_button) {
-                if(!sActiveConnection) {
-                    startClientConnectionThread();
-                    sActiveConnection = true;
-                }
-            } else if(view.getId() == R.id.discover_button) {
-                // TODO: Local network discovery module
+    }
+
+    @Override
+    public void onClick(View view) {
+
+        if(view.getId() == R.id.connect_button) {
+            if (!sActiveConnection) {
+                startClientConnectionThread();
+                sActiveConnection = true;
             }
-        } catch (RuntimeException e) {
-            e.printStackTrace();
+        } else if(view.getId() == R.id.discover_button) {
+                // TODO: Local network discovery module
         }
     }
     @Override
