@@ -10,17 +10,20 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import sxccal.edu.android.remouse.sensor.SensorThread;
-
+import sxccal.edu.android.remouse.io.DumpData;
 
 public class SensorFragment extends Fragment implements SensorEventListener, View.OnClickListener {
 
@@ -32,7 +35,10 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
     private Button mGyroscopeButton;
 
     private static final int REQUEST_RW_PERMISSION = 1444;
-    private static boolean alreadyClicked = false;
+    private static final String DIR= Environment.getExternalStorageDirectory().getAbsolutePath();
+
+    private static boolean sAlreadyClicked = false;
+    private static long sStartTime;
 
     public static ProgressDialog sProgressDialog;
 
@@ -70,9 +76,12 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
                 mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
             }
-            if(mSensor != null && !alreadyClicked) {
+            if(mSensor != null && !sAlreadyClicked) {
+                sStartTime = System.nanoTime();
+                sProgressDialog = ProgressDialog.show(getContext(), "Sensor Data Dump",
+                        "Dumping in progress", false, false);
                 mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
-                alreadyClicked = true;
+                sAlreadyClicked = true;
             }
         } catch (RuntimeException e) {
             e.printStackTrace();
@@ -82,7 +91,7 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
     private void unregisterSensor() {
         if(mSensorManager != null) {
             mSensorManager.unregisterListener(this);
-            alreadyClicked = false;
+            sAlreadyClicked = false;
         }
     }
 
@@ -99,19 +108,36 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
     }
 
     @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        sProgressDialog = ProgressDialog.show(getContext(), "Sensor Data Dump",
-                "Dumping in progress", false, false);
+    public void onSensorChanged(final SensorEvent sensorEvent) {
 
-        Thread sensorThread = new Thread(new SensorThread(sensorEvent, mSensor));
-        sensorThread.start();
+        new Thread() {
+            @Override
+            public void run() {
+                boolean isLinear = false;
+                if(mSensor.getName().contains("Linear")) {
+                    isLinear = true;
+                }
+                DumpData dumpData = new DumpData(DIR, isLinear);
+                dumpData.dumpToFile(sensorEvent.timestamp, sensorEvent.values);
+                dumpData.closeFile();
+            }
+        }.start();
 
-        unregisterSensor();
-
-        /*if(!sensorThread.isAlive()) {
+        long currentTime = System.nanoTime() - sStartTime;
+        Log.i("Sensor: ", "" + currentTime);
+        if(currentTime/1e+9 >= 60) {
+            unregisterSensor();
+            handler.sendEmptyMessage(0);
             Toast.makeText(this.getContext(), "Data dumped", Toast.LENGTH_LONG).show();
-        }*/
+        }
     }
+
+    private static Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message message) {
+            SensorFragment.sProgressDialog.dismiss();
+        }
+    };
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
