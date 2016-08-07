@@ -5,7 +5,6 @@ import android.hardware.SensorEvent;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 import sxccal.edu.android.remouse.SensorFragment;
 import sxccal.edu.android.remouse.io.DumpData;
@@ -29,12 +28,12 @@ public class SensorThread implements Runnable {
         }
 
         DumpData dumpData = new DumpData(DIR, isLinear);
-        long startTime = System.currentTimeMillis(), currentTime;
+        long startTime = System.nanoTime(), currentTime;
 
         do {
-            currentTime = (System.currentTimeMillis() - startTime)/1000;
+            currentTime = System.nanoTime() - startTime;
             dumpData.dumpToFile(currentTime, mSensorEvent.values);
-        } while (currentTime < 30);
+        } while (currentTime/1e+9 < 30.);
 
         dumpData.closeFile();
         handler.sendEmptyMessage(0);

@@ -32,6 +32,7 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
     private Button mGyroscopeButton;
 
     private static final int REQUEST_RW_PERMISSION = 1444;
+    private static boolean alreadyClicked = false;
 
     public static ProgressDialog sProgressDialog;
 
@@ -69,24 +70,32 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
                 mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
             }
-            if(mSensor != null) {
+            if(mSensor != null && !alreadyClicked) {
                 mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
+                alreadyClicked = true;
             }
         } catch (RuntimeException e) {
             e.printStackTrace();
         }
     }
 
+    private void unregisterSensor() {
+        if(mSensorManager != null) {
+            mSensorManager.unregisterListener(this);
+            alreadyClicked = false;
+        }
+    }
+
     @Override
     public void onDetach() {
         super.onDetach();
-        if(mSensorManager != null)  mSensorManager.unregisterListener(this);
+        unregisterSensor();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if(mSensorManager != null)  mSensorManager.unregisterListener(this);
+        unregisterSensor();
     }
 
     @Override
@@ -97,10 +106,11 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
         Thread sensorThread = new Thread(new SensorThread(sensorEvent, mSensor));
         sensorThread.start();
 
-        mSensorManager.unregisterListener(this);
-        if(!sensorThread.isAlive()) {
+        unregisterSensor();
+
+        /*if(!sensorThread.isAlive()) {
             Toast.makeText(this.getContext(), "Data dumped", Toast.LENGTH_LONG).show();
-        }
+        }*/
     }
 
     @Override
