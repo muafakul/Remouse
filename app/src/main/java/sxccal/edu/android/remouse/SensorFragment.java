@@ -73,17 +73,19 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         try {
             if(view.getId() == R.id.nacc_button) {
+                sStartTime = System.nanoTime();
                 mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
             } else if(view.getId() == R.id.lacc_button) {
+                sStartTime = System.nanoTime();
                 mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
             } else if(view.getId() == R.id.gyro_button) {
+                sStartTime = System.nanoTime();
                 mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
             }
             if(mSensor != null && !sAlreadyClicked) {
-                sStartTime = System.nanoTime();
                 sProgressDialog = ProgressDialog.show(getContext(), "Sensor Data Dump",
                         "Dumping in progress", false, false);
                 mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
