@@ -8,6 +8,9 @@ public class DumpData {
 
     private String mFilePath;
     private FileWriter mFileWriter;
+    private File mDumpDir;
+
+    public boolean fileClosed = false;
 
     public  DumpData(String directory, boolean isLinear) {
         try {
@@ -34,8 +37,8 @@ public class DumpData {
 
     private void createAppDirectory(String directory) {
         mFilePath = directory + "/Remouse";
-        File dir = new File(mFilePath);
-        if (!dir.exists())  dir.mkdir();
+        mDumpDir  = new File(mFilePath);
+        if (!mDumpDir.exists())  mDumpDir.mkdir();
     }
 
     public void dumpToFile(long currentTime, float values[]) {
@@ -53,9 +56,15 @@ public class DumpData {
     public void closeFile() {
         try {
             mFileWriter.close();
+            fileClosed = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    public void delete() {
+        File[] files = mDumpDir.listFiles();
+        for(File file: files)
+            file.delete();
+    }
 }

@@ -12,14 +12,14 @@
         jar="/home/monti/Documents/PROJECTS/ANDROID/Remouse/app/build/intermediates/incremental-runtime-classes/debug/instant-run.jar"
         jumboMode="true"
         revision="24.0.1"
-        sha1="0f46f0ed3a39878cffb9fcc0a9e8ce7701ccb30d">
+        sha1="5a56a9f49105feab2eeddcee4c10312c55bbf95e">
         <dex dex="/home/monti/Documents/PROJECTS/ANDROID/Remouse/app/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run_648496f5735c57401da20fc2e688e4782bac08b8/classes.dex" />
     </item>
     <item
         jar="/home/monti/Documents/PROJECTS/ANDROID/Remouse/app/build/intermediates/incremental-classes/debug/instant-run-bootstrap.jar"
         jumboMode="true"
         revision="24.0.1"
-        sha1="8f29fbfa206d431dcdd0d4cfe262b66778b70435">
+        sha1="cea7bcc429e8358a1e181ab59554e4a0155ae0ca">
         <dex dex="/home/monti/Documents/PROJECTS/ANDROID/Remouse/app/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run-bootstrap_f3d97d36b437a577f248258d0caf93fa0364f5ea/classes.dex" />
     </item>
     <item

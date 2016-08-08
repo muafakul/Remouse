@@ -23,12 +23,14 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.util.List;
+
 import sxccal.edu.android.remouse.io.DumpData;
 
 public class SensorFragment extends Fragment implements SensorEventListener, View.OnClickListener {
 
     private SensorManager mSensorManager;
-    private Sensor mSensor;
+    private static Sensor sSensor;
 
     private Button mAcceleration;
     private Button mLinearAcceleration;
@@ -38,9 +40,11 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
     private static final String DIR= Environment.getExternalStorageDirectory().getAbsolutePath();
 
     private static boolean sAlreadyClicked = false;
+    private static boolean sOnPause = false;
     private static long sStartTime;
 
     public static ProgressDialog sProgressDialog;
+    private static DumpData sDumpData;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -50,7 +54,12 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
         mAcceleration = (Button) view.findViewById(R.id.nacc_button);
         mLinearAcceleration = (Button) view.findViewById(R.id.lacc_button);
         mGyroscopeButton = (Button) view.findViewById(R.id.gyro_button);
+        mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
 
+        if(mSensorManager != null) {
+            List<Sensor> sensorList = mSensorManager.getSensorList(Sensor.TYPE_ALL);
+            Log.i("Sensor: ", "" + sensorList);
+        }
         mAcceleration.setOnClickListener(this);
         mLinearAcceleration.setOnClickListener(this);
         mGyroscopeButton.setOnClickListener(this);
@@ -70,49 +79,61 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
     @Override
     public void onClick(View view) {
 
-        mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
-        try {
-            if(view.getId() == R.id.nacc_button) {
-                sStartTime = System.nanoTime();
-                mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if(view.getId() == R.id.nacc_button) {
+            sStartTime = System.nanoTime();
+            sSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-            } else if(view.getId() == R.id.lacc_button) {
-                sStartTime = System.nanoTime();
-                mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        } else if(view.getId() == R.id.lacc_button) {
+            sStartTime = System.nanoTime();
+            sSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
-            } else if(view.getId() == R.id.gyro_button) {
-                sStartTime = System.nanoTime();
-                mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-
-            }
-            if(mSensor != null && !sAlreadyClicked) {
-                sProgressDialog = ProgressDialog.show(getContext(), "Sensor Data Dump",
-                        "Dumping in progress", false, false);
-                mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
-                sAlreadyClicked = true;
-            }
-        } catch (RuntimeException e) {
-            e.printStackTrace();
+        } else if(view.getId() == R.id.gyro_button) {
+            sStartTime = System.nanoTime();
+            sSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        }
+        if(sSensor != null && !sAlreadyClicked) {
+            sProgressDialog = ProgressDialog.show(getContext(), "Sensor Data Dump",
+                    "Dumping in progress", false, false);
+            mSensorManager.registerListener(this, sSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            sAlreadyClicked = true;
         }
     }
 
     private void unregisterSensor() {
         if(mSensorManager != null) {
             mSensorManager.unregisterListener(this);
-            sAlreadyClicked = false;
+            if(!sOnPause)    sAlreadyClicked = false;
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        sStartTime = System.nanoTime();
+        if(sOnPause && sAlreadyClicked) {
+            sProgressDialog = ProgressDialog.show(getContext(), "Sensor Data Dump",
+                    "Dumping in progress", false, false);
+            sOnPause = false;
+            mSensorManager.registerListener(this, sSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
+        sOnPause = false;
         unregisterSensor();
+        if(sProgressDialog != null) handler.sendEmptyMessage(0);
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        sOnPause = true;
+        sAlreadyClicked = false;
+        if(sDumpData != null && !sDumpData.fileClosed) sDumpData.delete();
         unregisterSensor();
+        if(sProgressDialog != null) handler.sendEmptyMessage(0);
     }
 
     @Override
@@ -122,18 +143,19 @@ public class SensorFragment extends Fragment implements SensorEventListener, Vie
             @Override
             public void run() {
                 boolean isLinear = false;
-                if(mSensor.getName().contains("Linear")) {
+                if(sSensor.getName().contains("Linear")) {
                     isLinear = true;
                 }
-                DumpData dumpData = new DumpData(DIR, isLinear);
-                dumpData.dumpToFile(sensorEvent.timestamp, sensorEvent.values);
-                dumpData.closeFile();
+                sDumpData = new DumpData(DIR, isLinear);
+                sDumpData.dumpToFile(sensorEvent.timestamp, sensorEvent.values);
+                sDumpData.closeFile();
             }
         }.start();
 
-        long currentTime = System.nanoTime() - sStartTime;
+        long currentTime =  System.nanoTime() - sStartTime;
         Log.i("Sensor: ", "" + currentTime);
         if(currentTime/1e+9 >= 60) {
+            sOnPause = false;
             unregisterSensor();
             handler.sendEmptyMessage(0);
             Toast.makeText(this.getContext(), "Data dumped", Toast.LENGTH_LONG).show();
